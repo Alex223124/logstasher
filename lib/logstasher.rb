@@ -1,4 +1,6 @@
 require 'logstasher/version'
+require 'logstasher/levels'
+require 'logstasher/extensions/log_level_injector'
 require 'logstasher/active_support/log_subscriber'
 require 'logstasher/active_support/mailer_log_subscriber'
 require 'logstasher/active_record/log_subscriber'

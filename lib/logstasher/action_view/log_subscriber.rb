@@ -6,12 +6,17 @@ module LogStasher
   module ActionView
     class LogSubscriber < ::ActionView::LogSubscriber
       include CustomFields::LogSubscriber
+      extend LogStasher::Extensions::LogLevelInjector
 
       def render_template(event)
         logstash_event(event)
       end
       alias :render_partial :render_template
       alias :render_collection :render_template
+
+      inject_log_level :render_template, ::LogStasher::Levels::INFO
+      inject_log_level :render_partial, ::LogStasher::Levels::INFO
+      inject_log_level :render_collection, ::LogStasher::Levels::INFO
 
       def logger
         LogStasher.logger

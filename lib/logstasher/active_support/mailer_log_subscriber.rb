@@ -4,7 +4,9 @@ require 'active_support/log_subscriber'
 module LogStasher
   module ActiveSupport
     class MailerLogSubscriber < ::ActiveSupport::LogSubscriber
-      MAILER_FIELDS = [:mailer, :action, :message_id, :from, :to]
+      extend LogStasher::Extensions::LogLevelInjector
+
+      MAILER_FIELDS = [:mailer, :action, :message_id, :from, :to, :loglevel]
 
       def deliver(event)
         process_event(event, ['mailer', 'deliver'])
@@ -17,6 +19,10 @@ module LogStasher
       def process(event)
         process_event(event, ['mailer', 'process'])
       end
+
+      inject_log_level :deliver, ::LogStasher::Levels::INFO
+      inject_log_level :receive, ::LogStasher::Levels::INFO
+      inject_log_level :process, ::LogStasher::Levels::INFO
 
       def logger
         LogStasher.logger

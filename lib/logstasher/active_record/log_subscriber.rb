@@ -6,6 +6,7 @@ module LogStasher
   module ActiveRecord
     class LogSubscriber < ::ActiveRecord::LogSubscriber
       include CustomFields::LogSubscriber
+      extend LogStasher::Extensions::LogLevelInjector
 
       def identity(event)
         lsevent = logstash_event(event)
@@ -14,6 +15,9 @@ module LogStasher
         end
       end
       alias :sql :identity
+
+      inject_log_level :identity, ::LogStasher::Levels::INFO
+      inject_log_level :sql, ::LogStasher::Levels::INFO
 
       def logger
         LogStasher.logger

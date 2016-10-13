@@ -6,11 +6,13 @@ module LogStasher
   module ActiveSupport
     class LogSubscriber < ::ActiveSupport::LogSubscriber
       include CustomFields::LogSubscriber
+      extend LogStasher::Extensions::LogLevelInjector
 
       def process_action(event)
         payload = event.payload
 
-        data      = extract_request(payload)
+        data = payload.slice(:loglevel)
+        data.merge! extract_request(payload)
         data.merge! extract_status(payload)
         data.merge! runtimes(event)
         data.merge! location(event)
@@ -22,6 +24,8 @@ module LogStasher
         tags.push('exception') if payload[:exception]
         logger << LogStasher.build_logstash_event(data, tags).to_json + "\n"
       end
+
+      inject_log_level :process_action, ::LogStasher::Levels::INFO
 
       def redirect_to(event)
         Thread.current[:logstasher_location] = event.payload[:location]

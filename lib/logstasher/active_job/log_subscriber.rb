@@ -7,6 +7,7 @@ end
 module LogStasher
   module ActiveJob
     class LogSubscriber < ::ActiveJob::Logging::LogSubscriber
+      extend LogStasher::Extensions::LogLevelInjector
 
       def enqueue(event)
         process_event(event, 'enqueue')
@@ -39,6 +40,11 @@ module LogStasher
         process_event(event, 'perform_start')
       end
 
+      inject_log_level :enqueue, ::LogStasher::Levels::INFO
+      inject_log_level :enqueue_at, ::LogStasher::Levels::INFO
+      inject_log_level :perform, ::LogStasher::Levels::INFO
+      inject_log_level :perform_start, ::LogStasher::Levels::INFO
+
       def logger
         LogStasher.logger
       end
@@ -46,7 +52,8 @@ module LogStasher
       private
 
       def process_event(event, type)
-        data = extract_metadata(event)
+        data = event.payload.slice(:loglevel)
+        data.merge! extract_metadata(event)
         data.merge! extract_exception(event)
         data.merge! extract_scheduled_at(event) if type == 'enqueue_at'
         data.merge! extract_duration(event) if type == 'perform'
